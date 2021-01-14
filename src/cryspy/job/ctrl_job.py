@@ -210,7 +210,7 @@ class Ctrl_job:
         with open('sublog', 'w') as logf:
             subprocess.Popen([rin.jobcmd, rin.jobfile],
                              stdout=logf, stderr=logf)
-        os.chdir('../../')    # go back to ..
+        os.chdir('../../../')    # go back to ..
         # ---------- save status
         io_stat.set_stage(self.stat, self.current_id, self.current_stage + 1)
         io_stat.write_stat(self.stat)
@@ -483,7 +483,7 @@ class Ctrl_job:
         with open('sublog', 'w') as logf:
             subprocess.Popen([rin.jobcmd, rin.jobfile],
                              stdout=logf, stderr=logf)
-        os.chdir('../../')    # go back to csp root dir
+        os.chdir('../../../')    # go back to csp root dir
 
     def ctrl_skip(self):
         # ---------- log and out

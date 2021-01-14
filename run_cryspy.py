@@ -5,10 +5,10 @@ Main script
 
 import os
 
-from CrySPY.interface import select_code
-from CrySPY.job.ctrl_job import Ctrl_job
-from CrySPY.IO import read_input as rin
-from CrySPY.start import cryspy_init, cryspy_restart
+from src.cryspy.interface import select_code
+from src.cryspy import Ctrl_job
+from src.cryspy.IO import read_input as rin
+from src.cryspy.start import cryspy_init, cryspy_restart
 
 
 def main():

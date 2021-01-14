@@ -1159,7 +1159,7 @@ def diffinstat(stat):
         if old_mindist is None:
             stat.remove_option('structure', 'mindist')    # clear mindist
             for i in range(len(atype)):               # add mindist_?
-                io_stat.set_input_common(stat, sec, 'mindist_{}'.format(i+1),
+                io_stat.set_input_common(stat, sec, 'mindist_{}'.format(i + 1),
                                          '{}'.format(' '.join(
                                              str(x) for x in mindist[i])))
         # -- case: old_mindist = [], mindist = None
@@ -1170,7 +1170,7 @@ def diffinstat(stat):
         # -- case: old_mindist = [], mindist = [], update list
         else:
             for i in range(len(atype)):
-                io_stat.set_input_common(stat, sec, 'mindist_{}'.format(i+1),
+                io_stat.set_input_common(stat, sec, 'mindist_{}'.format(i + 1),
                                          '{}'.format(' '.join(
                                              str(x) for x in mindist[i])))
         logic_change = True
@@ -1296,7 +1296,7 @@ def diffinstat(stat):
         if not old_mindist_ea == mindist_ea:
             diff_out('mindist_ea', old_mindist_ea, mindist_ea)
             for i in range(len(atype)):
-                io_stat.set_input_common(stat, sec, 'mindist_ea_{}'.format(i+1),
+                io_stat.set_input_common(stat, sec, 'mindist_ea_{}'.format(i + 1),
                                          '{}'.format(' '.join(
                                              str(x) for x in mindist_ea[i])))
             logic_change = True

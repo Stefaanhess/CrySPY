@@ -202,7 +202,7 @@ def get_stress_step_soiap(stress_step_data, current_id, filename):
                 if len(tmp_lines) == 3:
                     tmp_lines = np.array(tmp_lines)
                     # Hartree/Bohr**3 --> eV/ang**3
-                    tmp_lines = tmp_lines * utility.hrt2ev / utility.bohr2ang**3
+                    tmp_lines = tmp_lines * utility.hrt2ev / utility.bohr2ang ** 3
                     stress_step.append(tmp_lines)
                     tmp_lines = []    # clear
     except:

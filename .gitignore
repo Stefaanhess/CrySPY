@@ -91,7 +91,7 @@ ENV/
 .ropeproject
 
 # find_wy
-CrySPY/find_wy/*
+src/cryspy/find_wy/*
 !.gitkeep
 
 # f-fingerprint
