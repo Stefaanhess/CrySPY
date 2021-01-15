@@ -1,1 +1,1 @@
-from . import gen_struc
+from cryspy import *
