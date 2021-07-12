@@ -13,6 +13,7 @@ from ..IO import io_stat, pkl_data
 from ..IO import read_input as rin
 from ..LAQA import laqa_restart
 from ..RS import rs_restart
+from CrySPY.SPKBO import spkbo_restart
 
 
 def restart():
@@ -41,6 +42,8 @@ def restart():
         # ------ BO
         if rin.algo == 'BO':
             bo_restart.restart(init_struc_data, prev_nstruc)
+        if rin.algo == 'SPKBO':
+            spkbo_restart.restart(init_struc_data, prev_nstruc)
         # ------ LAQA
         if rin.algo == 'LAQA':
             laqa_restart.restart(stat, prev_nstruc)
@@ -59,6 +62,9 @@ def restart():
         # ------ BO
         if rin.algo == 'BO':
             bo_restart.restart(init_struc_data, prev_nstruc)
+        # ------ SPKBO
+        if rin.algo == 'SPKBO':
+            spkbo_restart.restart(init_struc_data, prev_nstruc)
         # ------ LAQA
         if rin.algo == 'LAQA':
             laqa_restart.restart(stat, prev_nstruc)

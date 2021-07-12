@@ -61,7 +61,7 @@ def main():
 
     if not (jobs.id_queueing or jobs.id_running):
         # ---------- next selection or generation
-        if rin.algo in ['BO', 'LAQA', 'EA']:
+        if rin.algo in ['SPKBO', 'BO', 'LAQA', 'EA']:
             jobs.next_sg()
         # ---------- for RS
         else:

@@ -8,9 +8,12 @@ import shutil
 import subprocess
 
 import numpy as np
+import schnetpack as spk
+from pymatgen.io.ase import AseAtomsAdaptor
 
 from ..BO.select_descriptor import select_descriptor
 from ..BO import bo_next_select
+from ..SPKBO import spkbo_next_select
 from ..EA import ea_next_gen
 from ..gen_struc.struc_util import out_poscar, out_cif
 from ..interface import select_code
@@ -41,6 +44,10 @@ class Ctrl_job:
             (self.init_dscrpt_data, self.opt_dscrpt_data,
              self.bo_mean, self.bo_var,
              self.bo_score) = pkl_data.load_bo_data()
+        elif rin.algo == 'SPKBO':
+            (self.n_selection, self.id_queueing,
+             self.id_running, self.id_select_hist) = pkl_data.load_spkbo_id()
+
         elif rin.algo == 'LAQA':
             (self.id_queueing, self.id_running,
              self.id_select_hist) = pkl_data.load_laqa_id()
@@ -240,6 +247,8 @@ class Ctrl_job:
             self.ctrl_collect_rs()
         elif rin.algo == 'BO':
             self.ctrl_collect_bo()
+        elif rin.algo == 'SPKBO':
+            self.ctrl_collect_spkbo()
         elif rin.algo == 'LAQA':
             self.ctrl_collect_laqa()
         elif rin.algo == 'EA':
@@ -308,6 +317,55 @@ class Ctrl_job:
         bo_data = (self.init_dscrpt_data, self.opt_dscrpt_data,
                    self.bo_mean, self.bo_var, self.bo_score)
         pkl_data.save_bo_data(bo_data)
+
+    def ctrl_collect_spkbo(self):
+        # ---------- get opt data
+        opt_struc, energy, magmom, check_opt = \
+            select_code.collect(self.current_id, self.work_path)
+        with open('cryspy.out', 'a') as fout:
+            fout.write('Done! ID {0:>6}: E = {1} eV/atom\n'.format(
+                self.current_id, energy))
+        print('    collect results: E = {0} eV/atom'.format(energy))
+        # ---------- register opt_struc
+        spg_sym, spg_num, spg_sym_opt, spg_num_opt = self.regist_opt(opt_struc)
+        # ---------- save rslt
+        self.rslt_data.loc[self.current_id] = [self.n_selection,
+                                               spg_num, spg_sym,
+                                               spg_num_opt, spg_sym_opt,
+                                               energy, magmom, check_opt]
+        pkl_data.save_rslt(self.rslt_data)
+        out_rslt(self.rslt_data)
+
+        # ---------- save bo_data
+        best_energy = pkl_data.load_spkbo_data()
+        pkl_data.save_bo_data(min(best_energy, energy))
+
+        # ---------- write relaxation paths to db for training of NN-models
+        database = spk.data.load_dataset(
+            "./data/train.db",
+            format=spk.data.AtomsDataFormat.ASE,
+        )
+        for k in self.energy_step_data.keys():
+            structure_ids = database.metadata["structure_ids"]
+            if k in structure_ids:
+                continue
+            e_min = np.min(self.energy_step_data[k])
+            for e, f, s, struc in zip(
+                    self.energy_step_data[k][0],
+                    self.force_step_data[k][0],
+                    self.stress_step_data[k][0],
+                    self.struc_step_data[k][0],
+            ):
+                database.add_system(
+                    atoms=AseAtomsAdaptor.get_atoms(struc),
+                    relaxation_energy=np.array([e_min]),
+                    energy=np.array([e]),
+                    forces=f,
+                    stress=s,
+                    structure_idx=np.array([k]),
+                )
+                structure_ids.append(k)
+                database.update_metadata(structure_ids=structure_ids)
 
     def ctrl_collect_laqa(self):
         # ---------- flag for finish
@@ -433,8 +491,8 @@ class Ctrl_job:
         # ---------- RS
         if rin.algo == 'RS':
             next_struc_data = self.init_struc_data[self.current_id]
-        # ---------- BO
-        elif rin.algo == 'BO':
+        # ---------- BO / SPKBO
+        elif rin.algo in ['BO', 'SPKBO']:
             next_struc_data = self.init_struc_data[self.current_id]
         # ---------- LAQA
         elif rin.algo == 'LAQA':
@@ -536,6 +594,21 @@ class Ctrl_job:
             bo_data = (self.init_dscrpt_data, self.opt_dscrpt_data,
                        self.bo_mean, self.bo_var, self.bo_score)
             pkl_data.save_bo_data(bo_data)
+        # ---------- BO
+        elif rin.algo == 'SPKBO':
+            # ------ save rslt
+            self.rslt_data.loc[self.current_id] = [self.n_selection,
+                                                   spg_num, spg_sym,
+                                                   spg_num_opt, spg_sym_opt,
+                                                   energy, magmom, check_opt]
+            pkl_data.save_rslt(self.rslt_data)
+            out_rslt(self.rslt_data)
+            # ------ update descriptors
+            self.opt_dscrpt_data[self.current_id] = None
+            # ------ save
+            spkbo_id_data = (self.n_selection, self.id_queueing,
+                          self.id_running, self.id_select_hist)
+            pkl_data.save_spkbo_id(spkbo_id_data)
         # ---------- LAQA
         elif rin.algo == 'LAQA':
             # ------ save rslt
@@ -600,6 +673,10 @@ class Ctrl_job:
             bo_id_data = (self.n_selection, self.id_queueing,
                           self.id_running, self.id_select_hist)
             pkl_data.save_bo_id(bo_id_data)
+        elif rin.algo == 'SPKBO':
+            bo_id_data = (self.n_selection, self.id_queueing,
+                          self.id_running, self.id_select_hist)
+            pkl_data.save_bo_id(bo_id_data)
         elif rin.algo == 'LAQA':
             laqa_id_data = (self.id_queueing, self.id_running,
                             self.id_select_hist)
@@ -637,6 +714,8 @@ class Ctrl_job:
         '''
         if rin.algo == 'BO':
             self.next_select_BO()
+        if rin.algo == 'SPKBO':
+            self.next_select_SPKBO()
         if rin.algo == 'LAQA':
             self.next_select_LAQA()
         if rin.algo == 'EA':
@@ -671,6 +750,35 @@ class Ctrl_job:
                       self.id_running, self.id_select_hist)
         bo_next_select.next_select(self.stat, self.rslt_data,
                                    bo_id_data, bo_data)
+
+    def next_select_SPKBO(self):
+        # ---------- log and out
+        with open('cryspy.out', 'a') as fout:
+            fout.write('\nDone selection {}\n\n'.format(self.n_selection))
+        print('\nDone selection {}\n'.format(self.n_selection))
+        # ---------- done all structures
+        if len(self.rslt_data) == rin.tot_struc:
+            with open('cryspy.out', 'a') as fout:
+                fout.write('\nDone all structures!\n')
+            print('Done all structures!')
+            os.remove('lock_cryspy')
+            raise SystemExit()
+        # ---------- check point 3
+        if rin.stop_chkpt == 3:
+            print('Stop at check point 3: BO is ready\n')
+            os.remove('lock_cryspy')
+            raise SystemExit()
+        # ---------- max_select_bo
+        if 0 < rin.max_select_spkbo <= self.n_selection:
+            print('Reached max_select_spkbo: {}\n'.format(rin.max_select_spkbo))
+            os.remove('lock_cryspy')
+            raise SystemExit()
+        # ---------- SPKBO
+        best_value = pkl_data.load_spkbo_data()
+        bo_id_data = (self.n_selection, self.id_queueing,
+                      self.id_running, self.id_select_hist)
+        spkbo_next_select.next_select(self.stat, self.rslt_data,
+                                   bo_id_data, best_value)
 
     def next_select_LAQA(self):
         # ---------- check point 3

@@ -13,6 +13,8 @@ def stat_init():
     # ---------- algo
     if rin.algo == 'BO':
         stat.add_section('BO')
+    if rin.algo == 'SPKBO':
+        stat.add_section('SPKBO')
     if rin.algo == 'LAQA':
         stat.add_section('LAQA')
     if rin.algo == 'EA':

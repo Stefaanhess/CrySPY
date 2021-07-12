@@ -15,6 +15,7 @@ from ..IO import pkl_data, io_stat
 from ..IO import read_input as rin
 from ..LAQA import laqa_init
 from ..RS import rs_init
+from CrySPY.SPKBO import spkbo_init
 
 
 def initialize():
@@ -122,6 +123,8 @@ def initialize():
         rs_init.initialize(stat)
     elif rin.algo == 'BO':
         bo_init.initialize(stat, init_struc_data, rslt_data)
+    elif rin.algo == 'SPKBO':
+        spkbo_init.initialize(stat, init_struc_data, rslt_data)
     elif rin.algo == 'LAQA':
         laqa_init.initialize(stat)
     elif rin.algo == "EA":

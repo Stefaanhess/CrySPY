@@ -25,8 +25,8 @@ def readin():
         raise NotImplementedError(
             'calc_code must be VASP, QE, OMX, soiap, or LAMMPS')
     algo = config.get('basic', 'algo')
-    if algo not in ['RS', 'BO', 'LAQA', 'EA']:
-        raise NotImplementedError('algo must be RS, BO, LAQA, or EA')
+    if algo not in ['RS', 'BO', 'LAQA', 'EA', 'SPKBO']:
+        raise NotImplementedError('algo must be RS, BO, SPKBO, LAQA, or EA')
     if algo == 'LAQA':
         if calc_code in ['QE', 'LAMMPS']:
             raise NotImplementedError('LAQA: only VASP or soiap for now')
@@ -342,6 +342,24 @@ def readin():
                     raise ValueError('manual_select_bo must be'
                                      ' non-negative int'
                                      ' and less than tot_struc')
+    # ---------- BO
+    if algo == 'SPKBO':
+        # ------ global declaration
+        global nselect_spkbo
+        global max_select_spkbo
+        # ------ read intput variables
+        nselect_spkbo = config.getint('SPKBO', 'nselect_spkbo')
+        if nselect_spkbo <= 0:
+            raise ValueError('nselect_spkbo <= 0, check nselect_spkbo')
+        elif tot_struc < nselect_spkbo:
+            raise ValueError('tot_struc < nselect_spkbo, check nselect_spkbo')
+        # -- BO option
+        try:
+            max_select_spkbo = config.getint('SPKBO', 'max_select_spkbo')
+        except configparser.NoOptionError:
+            max_select_spkbo = 0
+        if max_select_spkbo < 0:
+            raise ValueError('max_select_spkbo must be non-negative int')
 
     # ---------- LAQA
     if algo == 'LAQA':
@@ -665,6 +683,12 @@ def writeout():
             fout.write('manual_select_bo = {}\n'.format(
                 ' '.join(str(x) for x in manual_select_bo)))
 
+        # ------ SPKBO
+        if algo == 'SPKBO':
+            fout.write('# ------ SPKBO section\n')
+            fout.write('nselect_spkbo = {}\n'.format(nselect_spkbo))
+            fout.write('max_select_spkbo = {}\n'.format(max_select_spkbo))
+
         # ------ LAQA
         if algo == 'LAQA':
             fout.write('# ------ LAQA section\n')
@@ -815,6 +839,12 @@ def save_stat(stat):    # only 1st run
         stat.set('BO', 'max_select_bo', '{}'.format(max_select_bo))
         stat.set('BO', 'manual_select_bo', '{}'.format(
             ' '.join(str(x) for x in manual_select_bo)))
+
+    # ---------- SPKBO
+    if algo == 'SPKBO':
+        stat.set('SPKBO', 'nselect_spkbo', '{}'.format(nselect_spkbo))
+        stat.set('SPKBO', 'max_select_spkbo', '{}'.format(max_select_spkbo))
+
 
     # ---------- LAQA
     if algo == 'LAQA':
@@ -992,6 +1022,11 @@ def diffinstat(stat):
         old_max_select_bo = stat.getint('BO', 'max_select_bo')
         old_manual_select_bo = stat.get('BO', 'manual_select_bo')
         old_manual_select_bo = [int(x) for x in old_manual_select_bo.split()]
+
+    # ------ SPKBO
+    if old_algo == 'SPKBO':
+        old_nselect_spkbo = stat.getint('SPKBO', 'nselect_spkbo')
+        old_max_select_spkbo = stat.getint('SPKBO', 'max_select_spkbo')
 
     # ------ LAQA
     if old_algo == 'LAQA':
@@ -1246,6 +1281,18 @@ def diffinstat(stat):
             io_stat.set_input_common(stat, sec, 'manual_select_bo',
                                      '{}'.format(' '.join(
                                          str(x) for x in manual_select_bo)))
+            logic_change = True
+
+    # ------ SPKBO
+    sec = 'SPKBO'
+    if algo == 'SPKBO':
+        if not old_nselect_spkbo == nselect_spkbo:
+            diff_out('nselect_spkbo', old_nselect_spkbo, nselect_spkbo)
+            io_stat.set_input_common(stat, sec, 'nselect_spkbo', nselect_spkbo)
+            logic_change = True
+        if not old_max_select_spkbo == max_select_spkbo:
+            diff_out('max_select_spkbo', old_max_select_spkbo, max_select_spkbo)
+            io_stat.set_input_common(stat, sec, 'max_select_spkbo', max_select_spkbo)
             logic_change = True
 
     # ------ LAQA

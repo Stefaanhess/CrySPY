@@ -115,6 +115,17 @@ def save_bo_id(bo_id_data):
         pickle.dump(bo_id_data, f)
 
 
+def load_spkbo_id():
+    with open('./data/pkl_data/SPKBO_id_data.pkl', 'rb') as f:
+        data = pickle.load(f)
+    return data
+
+
+def save_spkbo_id(spkbo_id_data):
+    with open('./data/pkl_data/SPKBO_id_data.pkl', 'wb') as f:
+        pickle.dump(spkbo_id_data, f)
+
+
 def load_bo_data():
     with open('./data/pkl_data/BO_data.pkl', 'rb') as f:
         bo_data = pickle.load(f)
@@ -123,6 +134,17 @@ def load_bo_data():
 
 def save_bo_data(bo_data):
     with open('./data/pkl_data/BO_data.pkl', 'wb') as f:
+        pickle.dump(bo_data, f)
+
+
+def load_spkbo_data():
+    with open('./data/pkl_data/SPKBO_data.pkl', 'rb') as f:
+        bo_data = pickle.load(f)
+    return bo_data
+
+
+def save_spkbo_data(bo_data):
+    with open('./data/pkl_data/SPKBO_data.pkl', 'wb') as f:
         pickle.dump(bo_data, f)
 
 

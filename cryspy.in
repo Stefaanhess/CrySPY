@@ -1,5 +1,5 @@
 [basic]
-algo = BO
+algo = SPKBO
 calc_code = soiap
 tot_struc = 5
 nstage = 1
@@ -12,14 +12,8 @@ natot = 8
 atype = Si
 nat = 8
 
-[BO]
-nselect_bo = 1
-dscrpt = FP
-score = TS
-fp_rmin = 0.5
-fp_rmax = 5.0
-fp_npoints = 20
-fp_sigma = 1.0
+[SPKBO]
+nselect_spkbo = 2
 
 [soiap]
 soiap_infile = soiap.in
@@ -27,3 +21,7 @@ soiap_outfile = soiap.out
 soiap_cif = initial.cif
 
 [option]
+energy_step_flag = True
+force_step_flag = True
+stress_step_flag = True
+struc_step_flag = True
