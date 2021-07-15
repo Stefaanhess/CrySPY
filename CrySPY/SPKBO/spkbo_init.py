@@ -43,7 +43,7 @@ def initialize(stat, init_struc_data, rslt_data):
     # ---------- save for BO
     id_data = (n_selection, id_queueing, id_running, id_select_hist)
     pkl_data.save_spkbo_id(id_data)
-    spkbo_data = (0)
+    spkbo_data = ([0, 0])
     pkl_data.save_spkbo_data(spkbo_data)
 
     # ---------- status

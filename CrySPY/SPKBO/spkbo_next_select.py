@@ -16,7 +16,7 @@ from scipy.stats import norm
 from pymatgen.io.ase import AseAtomsAdaptor
 
 
-def next_select(stat, rslt_data, bo_id_data, best_value):
+def next_select(stat, rslt_data, bo_id_data):
     # ---------- out and log
     with open('cryspy.out', 'a') as fout:
         fout.write('# ------ SPK Bayesian optimization\n')
@@ -54,6 +54,9 @@ def next_select(stat, rslt_data, bo_id_data, best_value):
                 [pred["relaxation_energy"] for pred in ensemble(spk_input)]
             predicted_energies.append(predicted_energy.item())
             uncertainties.append(uncertainty.item())
+
+    best_value, bo_epoch = pkl_data.load_spkbo_data()
+
     ei = expected_improvement(
         predictions=np.array(predicted_energies),
         uncertainties=np.array(uncertainties),
