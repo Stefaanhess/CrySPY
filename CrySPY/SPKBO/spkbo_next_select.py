@@ -10,6 +10,7 @@ from ..BO.combo_cryspy import Policy_cryspy
 from ..IO import io_stat, out_results, pkl_data
 from ..IO import read_input as rin
 import torch
+import torch.nn as nn
 import cryspyschnet
 import schnetpack as spk
 from scipy.stats import norm
@@ -30,7 +31,12 @@ def next_select(stat, rslt_data, bo_id_data):
 
     # prepare nn model
     device = "cpu"
-    ensemble = torch.load("./data/best_model.spk", map_location="cpu")
+    best_value, bo_epoch, training_epoch = pkl_data.load_spkbo_data()
+    # todo hardcoded n_models
+    trained_models = [
+        torch.load(f"./runs/job{training_epoch}_{i}/best_inference_model", map_location=device) for i in range(5)
+    ]
+    ensemble = cryspyschnet.spk_tools.NNEnsemble(nn.ModuleList(trained_models), properties=["relaxation_energy"])
     atoms_converter = cryspyschnet.spk_tools.AtomsConverter(
         transforms=[
             spk.transform.TorchNeighborList(cutoff=5.),
