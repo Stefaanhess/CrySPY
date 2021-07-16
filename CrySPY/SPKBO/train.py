@@ -4,8 +4,7 @@ import os
 
 
 def train_models(n_models):
-    # todo: hardcode
-    bo_epoch = 0
+    best_value, bo_epoch, training_started = pkl_data.load_spkbo_data()
     for i in range(n_models):
         print(f"submitted training job for model {i} in bo-epoch {bo_epoch}")
         subprocess.call("pwd")

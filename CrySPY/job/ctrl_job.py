@@ -337,8 +337,8 @@ class Ctrl_job:
         out_rslt(self.rslt_data)
 
         # ---------- save bo_data
-        best_energy, bo_epoch = pkl_data.load_spkbo_data()
-        pkl_data.save_bo_data([min(best_energy, energy), bo_epoch+1])
+        best_energy, bo_epoch, training_started = pkl_data.load_spkbo_data()
+        pkl_data.save_spkbo_data([min(best_energy, energy), bo_epoch+1, training_started])
 
         # ---------- write relaxation paths to db for training of NN-models
         database = spk.data.load_dataset(
@@ -366,7 +366,6 @@ class Ctrl_job:
                 )
                 structure_ids.append(k)
                 database.update_metadata(structure_ids=structure_ids)
-        train.train_models(n_models=5)
 
     def ctrl_collect_laqa(self):
         # ---------- flag for finish
@@ -716,8 +715,16 @@ class Ctrl_job:
         if rin.algo == 'BO':
             self.next_select_BO()
         if rin.algo == 'SPKBO':
-            if train.training_still_running():
-                return
+            # check if training has already started for current epoch
+            best_value, bo_epoch, training_started = pkl_data.load_spkbo_data()
+            if training_started != bo_epoch:
+                train.train_models(5)
+                pkl_data.save_spkbo_data([best_value, bo_epoch, bo_epoch])
+            else:
+                # check if training is still running
+                if train.training_still_running():
+                    return
+            # select next structures if nn models are trained
             self.next_select_SPKBO()
         if rin.algo == 'LAQA':
             self.next_select_LAQA()

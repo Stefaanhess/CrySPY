@@ -55,7 +55,7 @@ def next_select(stat, rslt_data, bo_id_data):
             predicted_energies.append(predicted_energy.item())
             uncertainties.append(uncertainty.item())
 
-    best_value, bo_epoch = pkl_data.load_spkbo_data()
+    best_value, bo_epoch, training_started = pkl_data.load_spkbo_data()
 
     ei = expected_improvement(
         predictions=np.array(predicted_energies),
