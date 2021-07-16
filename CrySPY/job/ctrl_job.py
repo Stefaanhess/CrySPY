@@ -676,7 +676,7 @@ class Ctrl_job:
         elif rin.algo == 'SPKBO':
             bo_id_data = (self.n_selection, self.id_queueing,
                           self.id_running, self.id_select_hist)
-            pkl_data.save_bo_id(bo_id_data)
+            pkl_data.save_spkbo_id(bo_id_data)
         elif rin.algo == 'LAQA':
             laqa_id_data = (self.id_queueing, self.id_running,
                             self.id_select_hist)
@@ -715,17 +715,8 @@ class Ctrl_job:
         if rin.algo == 'BO':
             self.next_select_BO()
         if rin.algo == 'SPKBO':
-            # check if training has already started for current epoch
-            best_value, bo_epoch, training_started = pkl_data.load_spkbo_data()
-            if training_started != bo_epoch:
-                train.train_models(5)
-                pkl_data.save_spkbo_data([best_value, bo_epoch, bo_epoch])
-            else:
-                # check if training is still running
-                if train.training_still_running():
-                    return
-            # select next structures if nn models are trained
-            self.next_select_SPKBO()
+                # select next structures if nn models are trained
+                self.next_select_SPKBO()
         if rin.algo == 'LAQA':
             self.next_select_LAQA()
         if rin.algo == 'EA':
@@ -771,6 +762,7 @@ class Ctrl_job:
             with open('cryspy.out', 'a') as fout:
                 fout.write('\nDone all structures!\n')
             print('Done all structures!')
+            io_stat.set_id(self.stat, 'stop_chkpt', [1])
             os.remove('lock_cryspy')
             raise SystemExit()
         # ---------- check point 3
@@ -784,6 +776,18 @@ class Ctrl_job:
             os.remove('lock_cryspy')
             raise SystemExit()
         # ---------- SPKBO
+        # check if training has already started for current epoch
+        if not os.path.exists("training_started"):
+            train.train_models(5)
+            with open("training_started", "w") as file:
+                file.write("I indicate if a training has started. Remove me after training")
+            return
+        else:
+            # check if training is still running
+            if train.training_still_running():
+                return
+            # remove training started flag
+            os.remove("training_started")
         bo_id_data = (self.n_selection, self.id_queueing,
                       self.id_running, self.id_select_hist)
         spkbo_next_select.next_select(self.stat, self.rslt_data, bo_id_data)

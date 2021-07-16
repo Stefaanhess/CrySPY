@@ -118,7 +118,8 @@ def next_select(stat, rslt_data, bo_id_data, bo_data):
 
     # ---------- status
     io_stat.set_common(stat, 'selection', n_selection)
-    io_stat.set_id(stat, 'selected_id', id_queueing)
+    io_stat.set_id(stat, 'selected_id',
+                   )
     io_stat.set_id(stat, 'id_queueing', id_queueing)
     io_stat.write_stat(stat)
 
